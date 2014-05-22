@@ -120,7 +120,7 @@ public class AffinityPropagation
       vertex.getValue().weights.put(neighbor, weight);
       vertex.getValue().lastMessages.put(neighbor, new DoubleWritable(0));
       sendMessage(neighbor, new APMessage(vertex.getId(), 0));
-      removeEdgesRequest(vertex.getId(), neighbor);
+      vertex.removeEdges(neighbor);
     }
   }
 

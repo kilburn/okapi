@@ -79,7 +79,7 @@ public class AffinityPropagation
   @Override
   public void compute(Vertex<APVertexID, APVertexValue, DoubleWritable> vertex,
                       Iterable<APMessage> messages) throws IOException {
-    logger.trace("vertex {}, superstep {}" , vertex.getId(), getSuperstep());
+    logger.trace("vertex {}, superstep {}", vertex.getId(), getSuperstep());
     final int maxIter = getContext().getConfiguration().getInt(MAX_ITERATIONS, MAX_ITERATIONS_DEFAULT);
     // Phases of the algorithm
     if (getSuperstep() == 0) {
@@ -181,9 +181,16 @@ public class AffinityPropagation
 
     // Receive messages and compute
     for (APMessage message : messages) {
+      //logger.debug("{} receives {} from {}", id, message.value, message.from);
       factor.receive(message.value, message.from);
     }
     factor.run();
+
+    // Vote to halt if the messages have not changed
+    if (collector.isConverged()) {
+      logger.debug("{} votes to halt.", id);
+      vertex.voteToHalt();
+    }
   }
 
   private void computeExemplars(Vertex<APVertexID, APVertexValue, DoubleWritable> vertex,
@@ -254,6 +261,7 @@ public class AffinityPropagation
     private MapWritable lastMessages;
     final float damping = getContext().getConfiguration().getFloat(DAMPING, DAMPING_DEFAULT);
     final float epsilon = getContext().getConfiguration().getFloat(EPSILON, EPSILON_DEFAULT);
+    int nMessagesSent = 0;
 
     public MessageRelayer(MapWritable lastMessages) {
       this.lastMessages = lastMessages;
@@ -272,6 +280,11 @@ public class AffinityPropagation
       logger.trace("{} -> {} : {}", sender, recipient, value);
       AffinityPropagation.this.sendMessage(recipient, new APMessage(sender, value));
       lastMessages.put(recipient, new DoubleWritable(value));
+      nMessagesSent++;
+    }
+
+    public boolean isConverged() {
+      return nMessagesSent == 0;
     }
   }
 

@@ -16,6 +16,8 @@
 package ml.grafos.okapi.clustering.ap;
 
 import org.apache.giraph.master.DefaultMasterCompute;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
 * Affinity Propagation's MasterCompute.
@@ -24,6 +26,7 @@ import org.apache.giraph.master.DefaultMasterCompute;
 * @author Marc Pujol-Gonzalez <mpujol@iiia.csic.es>
 */
 public class MasterComputation extends DefaultMasterCompute {
+  private static Logger logger = LoggerFactory.getLogger(AffinityPropagation.class);
 
   @Override
   public void initialize() throws InstantiationException, IllegalAccessException {
@@ -31,4 +34,9 @@ public class MasterComputation extends DefaultMasterCompute {
     registerPersistentAggregator("exemplars", ExemplarAggregator.class);
   }
 
+  @Override
+  public void compute() {
+    super.compute();
+    logger.debug("Master computing at iteration {}", getSuperstep());
+  }
 }
